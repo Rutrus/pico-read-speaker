@@ -7,7 +7,7 @@ The limit of characters are in theory, unlimited.
 
 Authors : Various (@mickaelh @rutrus)
 
-Version : 1.1.0
+Version : 1.2.0
 
 Licence : GPL v3
 
