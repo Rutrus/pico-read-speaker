@@ -4,54 +4,53 @@
 #exec : text2wav.py
 
 u"""
-Auteur  : Mickaelh
+Authors : Mickaelh, Rutrus
 version : 1.1.0
 Licence : GPL v3
 
-Description : Using pico2wave to ease from the recovery text to the
-    clipboard or a file so unlimited.
-    pico2wave takes into account a limited number of characters, my program solves this problem.
+Description: Native package `pico2wave` takes into account a limited number of
+characters, this script solves this problem. `text2wav.py` converts completely
+from the clipboard or a file to spoken words.
+The limit of characters are in theory, unlimited.
 
-System : the compliant systems under linux kernels: Debian, Ubuntu, Maemo ...
+## Required
+System: It compiles under linux kernels: Debian, Ubuntu, Maemo ...
+The SVOX Pico engine is a software speech synthesizer for German, English (GB and US), Spanish, French and Italian.
 
-Installation required :
-    - svox (pico2wave) https://packages.debian.org/source/squeeze/svox
-    - Python install gtk : $ sudo apt-get install python-gtk2-dev
+Installation required:
+    - libttspico* (`pico2wave` command)
+    - gtk2 module for python
 
-Svox package maemo dispnible on https://openrepos.net/
-installation order:
-    - libttspico-data (https://openrepos.net/content/mickaelh/libttspico-data)
-    - libttspico0 (https://openrepos.net/content/mickaelh/libttspico0)
-    - libttspico-utils (https://openrepos.net/content/mickaelh/libttspico-utils)
-    - libttspico-dev (https://openrepos.net/content/mickaelh/libttspico-dev)
+## How to use this script
+    $ ./text2wav.py [-i <input text file>] [-l|--lang fr-FR] [-o <sound-file.mp3>]
 
+- If you select and copy your text (ctrl+c), then execute `./text2wav.py` in a command terminal
+- You can also choose a name for the output file `./text2wav.py -o "Your sound file.mp3"` by default it outputs *chapter.[wav|mp3]*
+- If your source is in txt file instead execute `./text2wav.py -i 'yourtextfile.txt'`
 
-Why this script: I love listening to my book on my mobile N900 while I
-    drove on the road to work
+**Note: You can config some things**
+- Line 46: The optional parameter [-l | --lang] is by default `--lang 'en-US'`. You can config default_lang in line 46. 
+- Line 48: In the current directory of "text2wav.py" it will generate by default only one file named `chapter.wav` or `chapter.mp3`
+- Line 50: You can turn on the mp3 converter installing ffmpeg and switching to True.
 
-
-How to use this script:
-    - selected your text and copy (ctrl + c) and executed a command terminal
-    $ ./text2wav.py
-
-In the current directory of text2wav.py it will generate only one file, named chapter.wav
-I you want it in mp3 and you have ffmpeg installed, uncomment line 155
 Good listening.
 
 TODO:
-    Development of the text file part and manage multiple text file so
-    ilimiter vocalize books completely.
+    Development of the text file part and manage multiple text file so ilimiter vocalize books completely.
 """
-
-
-
+from __future__ import print_function
 import os, sys, gtk, getopt, wave
 
-#limit char of pico2wave
-limit_char = 30000
-#choose default language between: 'en-US','en-GB','de-DE','es-ES','fr-FR','it-IT'
+# START CONFIG
+#Choose default language between: 'en-US','en-GB','de-DE','es-ES','fr-FR','it-IT'
 default_lang = 'en-US'
+#Default name of .wav or .mp3 file
+default_outfile = 'chapter'
+#Convert to mp3? Install ffmpeg before
+is_ffmpeg_installed = False
+# END CONFIG
 
+limit_char=30000
 # get text from (ctrl + c)
 def text_clipboard():
     clipboard = gtk.clipboard_get()
@@ -62,7 +61,8 @@ def text_file(arg):
     try:
         f = open(arg, 'r')
     except IOError:
-        return "Error: file not found"
+        print("Error: file not found", file=sys.stderr)
+        return 1
     return f.read()
 
 #cut the text by sentence
@@ -90,15 +90,16 @@ def casier_txt(list_txt):
 
     return list_chapter
 
-def joinwavs(outfile = "chapter.wav"):
+def joinwavs(outfile):
     infiles = []
 
     for root, dirs, files in os.walk(os.getcwd()):
         for f in files:
-            if f.startswith('article') and f.endswith('.wav'):
+            if f.startswith('article_picotts_') and f.endswith('.wav'):
                 infiles.append(f)
 
     if len(infiles) > 1:
+        print("Joining wav files into %s" %outfile, file=sys.stderr)
         data = []
         for infile in infiles:
             w = wave.open(infile, 'rb')
@@ -110,15 +111,20 @@ def joinwavs(outfile = "chapter.wav"):
         for params,frames in data:
             output.writeframes(frames)
         output.close()
+        for f in infiles:
+            os.remove(f)
     else:
-        os.system('rm %s' % outfile)
-        os.system('mv %s %s' % (infiles[0], outfile))
+        os.rename(infiles[0], outfile)
     return outfile
 
-def wav2mp3(infile = "chapter.wav"):
-    outfile = ' %s.mp3' % infile[:-4]
-    os.system('ffmpeg -i %s %s' % (infile, outfile))
-    os.system('rm %s' % infile)
+def wav2mp3(infile):
+    outfile = '%s.mp3' % infile[:-4]
+    print("'%s' will be replaced with '%s'" %(infile,outfile), file=sys.stderr)
+    try:
+        os.remove(outfile)
+    except: pass
+    os.system('ffmpeg -i "%s" -codec:a libmp3lame "%s"' % (infile, outfile))
+    os.remove(infile)
     return outfile
 
 # execute command line pico2wave
@@ -128,9 +134,11 @@ def text_to_speech(txt,lang):
         lang = default_lang
 
     txt = txt.replace('"','')
+    txt = txt.replace('.\n','. ')
+    txt = txt.replace('\n\n','. ')
     total_letter = len(txt)
     if total_letter > 1:
-        list_txt = txt.split('.')
+        list_txt = txt.split('. ')
         list_txt = filter(None, list_txt)
     else:
         list_txt = []
@@ -140,26 +148,31 @@ def text_to_speech(txt,lang):
         position = casier_txt(list_txt)
 
     else:
-        return "No sentence"
+        print("No sentences founded", file=sys.stderr)
+        return 1
 
-    os.system('rm article*.wav')
+    delete = []
+    for root, dirs, files in os.walk(os.getcwd()):
+        for f in files:
+            if f.startswith('article_picotts_') and f.endswith('.wav'):
+                delete.append(f)
+    for f in delete:
+        os.remove(f)
+
     for index,value in enumerate(position):
         if value:
             value =' '.join(value)
             print("Translating in %s ..." % (lang))
-            os.system('pico2wave -l %s -w article%02d.wav "%s"' % (lang, index+1, value))
-            print("File Creation: article%02d.wav" % (index+1))
+            os.system('pico2wave -l %s -w article_picotts_%02d.wav "%s"' % (lang, index+1, value))
+            print("File Creation: article_picotts_%02d.wav" % (index+1))
 
-    outfile = joinwavs()
-    #If you have ffmpeg installed:
-    #outfile = wav2mp3()
-
-    return "Speech complete!. The result is in: %s" % outfile
+    print("Created %d wav files correctly" % (index + 1), file=sys.stderr)
 
 def main(argv):
     lang = ''
+    outfile = default_outfile
     try:
-        opts, args = getopt.getopt(argv,"hi:l:",["help","input_text_file=","lang="])
+        opts, args = getopt.getopt(argv,"hi:l:o:",["help","input_text_file=","lang=","output_wav_file="])
     except getopt.GetoptError:
         sys.exit(2)
 
@@ -170,15 +183,21 @@ def main(argv):
             else:
                 lang = default_lang
 
+            if opt in ('-o', '--output_wav_file'):
+                outfile = arg
+
             if opt in ('-h','--help'):
                 print(
-'''Usage: text2wav.py [option] [-i|--input_text_file text_file]
+'''Usage:
+   %s [-i <input_txt>] [-l <lang>] [-o <wav_output>]
 
-Without -i option verifies if there is a text copied to clipboard
+Without -i option it verifies if there is a text copied to clipboard
 
 Options:
-    -i, --input_text_file   reads a text file
-    -l, --lang  Language (default: "%s")
+    -i, --input_text_file   Reads a text file
+    -l, --lang              Language. Default: "%s"
+    -o, --output_wav_file   Name of the result file.
+                            Default output file: "%s"
 
 Options lang:
     en-US   English
@@ -190,16 +209,28 @@ Options lang:
 
 Help option:
     -h,--help   show this message'''
-                % default_lang )
+                % (sys.argv[0], default_lang, outfile+'.wav' ))
                 sys.exit()
             elif opt in ('-i', '--input_text_file'):
                 txt = text_file(arg)
             else:
                 txt = text_clipboard()
+
     else:
         txt = text_clipboard()
 
-    print(text_to_speech(txt,lang))
+    text_to_speech(txt,lang)
+
+    if outfile.endswith('.wav') or outfile.endswith('.mp3'):
+        outfile = outfile[:-4]
+    outfile = joinwavs(outfile+'.wav')
+
+    #If you have ffmpeg installed:
+    if is_ffmpeg_installed:
+        outfile = wav2mp3(outfile)
+    print("Speech complete! The result is in:", file=sys.stderr)
+    print("%s" % outfile)
+    return 0
 
 if __name__ == "__main__":
    main(sys.argv[1:])
