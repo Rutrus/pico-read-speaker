@@ -18,27 +18,25 @@ System: It compiles under linux kernels: Debian, Ubuntu, Maemo ...
 The SVOX Pico engine is a software speech synthesizer for German, English (GB and US), Spanish, French and Italian.
 
 Installation required:
+- libttspico* (`pico2wave` command)
+- gtk2 module for python
 
-    - libttspico* (`pico2wave` command)
-    - gtk2 module for python
-
-If you have Ubuntu or Debian-based distro:
-    sudo apt-get install libttspico-utils python-gtk2-dev
-
+If you have Ubuntu or Debian-based distro: `sudo apt-get install libttspico-utils python-gtk2-dev`
+    
+If you want convert wav into mp3 then:
+- Install ffmpeg or libav-tools: `sudo apt-get install ffmpeg`
+- Turn line 50 to `True`
+    
 ## How to use this script
-    $ ./text2wav.py [-i <input text file>] [-l|--lang fr-FR]
+    $ ./text2wav.py [-i <input text file>] [-l|--lang fr-FR] [-o <sound-file.mp3>]
+    
+- If you select and copy your text (ctrl+c), then execute `./text2wav.py` in a command terminal
+- You can also choose a name for the output file `./text2wav.py -o "Your sound file.mp3"` by default it outputs *chapter.[wav|mp3]*
+- If your source is in txt file instead execute `./text2wav.py -i 'yourtextfile.txt'`
 
-If you select your text and copy it (ctrl+c), then execute `./text2wav.py` command terminal
-
-If you have a txt file instead execute `./text2wav.py -i 'yourtextfile.txt'`
-
-**Note:**
-The optional parameter [-l | --lang] is by default `--lang 'en-US'`
-
-You can edit default language in line 53. e.g. `default_lang = 'es-ES'`
-
-In the current directory of "text2wav.py" it will generate only one file named `chapter.wav`
-
-If you have ffmpeg installed you can uncomment line 155, then the file will convert it to `chapter.mp3`
+**Note: You can config some things**
+- Line 46: The optional parameter [-l | --lang] is by default `--lang 'en-US'`. You can config default_lang in line 46.
+- Line 48: In the current directory of "text2wav.py" it will generate by default only one file named `chapter.wav` or `chapter.mp3`
+- Line 50: You can turn on the mp3 converter switching it to `True` after installing ffmpeg.
 
 Good listening.
