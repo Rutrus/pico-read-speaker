@@ -3,17 +3,13 @@ Pico_read_speaker
 
 Using Pico2wave to ease from the recovery text to the clipboard or a file so unlimited.
 
-Pico2wave takes into account a limited number of characters, my program solves this problem.
+Pico2wave takes into account a limited number of characters, this program solves this problem.
 
-Why this script: I love listening to my book on my mobile N900 while I
-    drove on the road to work
-
-
-Auteur : Mickaelh
-version : 1.0.0
+Author : Mickaelh
+version : 1.1.0
 Licence : GPL v3
 
-required
+Required
 ========
 
 System : the compliant systems under linux kernels: Debian, Ubuntu, Maemo ...
@@ -25,6 +21,9 @@ Installation required :
 
     - svox (pico2wave) https://packages.debian.org/source/squeeze/svox
     - Python install gtk: $ sudo apt-get install python-gtk2-dev
+
+If you have Ubuntu or Debian-based distro:
+    - sudo apt-get install libttspico-utils python-gtk2-dev 
 
 Svox package maemo dispnible on https://openrepos.net/
 
@@ -38,15 +37,18 @@ installation order:
 How to use this script
 ======================
 
-selected your text and copy (ctrl+c) and executed a command terminal
+Select your text and copy it (ctrl+c), then execute a command terminal
 
     $ ./text2wav.py [-l|--lang fr-FR]
     or
     $ ./text2wav.py -i <input text file> [-l|--lang fr-FR]
 
-note:
-the optional parameter [-l | --lang] by default = en-US
+Note:
+The optional parameter [-l | --lang] by default = en-US
+You can edit default language in line 53. e.g. `default_lang = 'es-ES'`
 
-In the current directory of "text2wav.py" it will generate the article1.wav file article2.wav ...
+In the current directory of "text2wav.py" it will generate only one file named `chapter.wav`
+
+If you have ffmpeg installed you can uncomment line 155, then the file will convert it to `chapter.mp3`
 
 Good listening.
