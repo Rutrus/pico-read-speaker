@@ -5,7 +5,7 @@
 
 u"""
 Authors : Mickaelh, Rutrus
-version : 1.1.0
+version : 1.2.0
 Licence : GPL v3
 
 Description: Native package `pico2wave` takes into account a limited number of
