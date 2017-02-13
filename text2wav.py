@@ -20,6 +20,8 @@ The SVOX Pico engine is a software speech synthesizer for German, English (GB an
 Installation required:
     - libttspico* (`pico2wave` command)
     - gtk2 module for python
+Optional:
+    - ffmpeg
 
 ## How to use this script
     $ ./text2wav.py [-i <input text file>] [-l|--lang fr-FR] [-o <sound-file.mp3>]
@@ -29,9 +31,9 @@ Installation required:
 - If your source is in txt file instead execute `./text2wav.py -i 'yourtextfile.txt'`
 
 **Note: You can config some things**
-- Line 46: The optional parameter [-l | --lang] is by default `--lang 'en-US'`. You can config default_lang in line 46.
-- Line 48: In the current directory of "text2wav.py" it will generate by default only one file named `chapter.wav` or `chapter.mp3`
-- Line 50: You can turn on the mp3 converter installing ffmpeg and switching to True.
+- Line 48: The optional parameter [-l | --lang] is by default `--lang 'en-US'`. You can config default_lang in line 46.
+- Line 50: In the current directory of "text2wav.py" it will generate by default only one file named `chapter.wav` or `chapter.mp3`
+- Line 52: You can turn on/off the mp3 converter. If ffmpeg is installed it will switch to True.
 
 Good listening.
 
@@ -47,7 +49,7 @@ default_lang = 'en-US'
 #Default name of .wav or .mp3 file
 default_outfile = 'chapter'
 #Convert to mp3? Install ffmpeg before
-is_ffmpeg_installed = False
+is_ffmpeg_installed = (os.system('which ffmpeg') == 0)
 # END CONFIG
 
 limit_char=30000
@@ -176,6 +178,10 @@ def text_to_speech(txt,lang):
 def main(argv):
     lang = ''
     outfile = default_outfile
+    if (os.system('which pico2wave') != 0):
+        print("You must install pico2wave:")
+        print("sudo apt install -y libttspico-utils")
+        sys.exit(1)
     try:
         opts, args = getopt.getopt(argv,"hi:l:o:",["help","input_text_file=","lang=","output_wav_file="])
     except getopt.GetoptError:
@@ -194,7 +200,7 @@ def main(argv):
             if opt in ('-h','--help'):
                 print(
 '''Usage:
-   %s [-i <input_txt>] [-l <lang>] [-o <sound_file.mp3>]
+   %s [-i <input_txt>] [-l <lang>] [-o <sound_file.wav>]
 
 Without -i option it verifies if there is a text copied to clipboard
 
@@ -220,7 +226,6 @@ Help option:
                 txt = text_file(arg)
             else:
                 txt = text_clipboard()
-
     else:
         txt = text_clipboard()
 
