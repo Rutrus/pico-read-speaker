@@ -5,7 +5,7 @@
 
 u"""
 Authors : Mickaelh, Rutrus
-version : 1.2.0
+version : 1.2.1
 Licence : GPL v3
 
 Description: Native package `pico2wave` takes into account a limited number of
@@ -29,7 +29,7 @@ Installation required:
 - If your source is in txt file instead execute `./text2wav.py -i 'yourtextfile.txt'`
 
 **Note: You can config some things**
-- Line 46: The optional parameter [-l | --lang] is by default `--lang 'en-US'`. You can config default_lang in line 46. 
+- Line 46: The optional parameter [-l | --lang] is by default `--lang 'en-US'`. You can config default_lang in line 46.
 - Line 48: In the current directory of "text2wav.py" it will generate by default only one file named `chapter.wav` or `chapter.mp3`
 - Line 50: You can turn on the mp3 converter installing ffmpeg and switching to True.
 
@@ -72,16 +72,20 @@ def casier_txt(list_txt):
     list_chapter = []
 
     for sentence in list_txt:
-        current_letter += len(sentence)
+        current_letter = current_letter + len(sentence) + 2 # It will add dot and space chars too
         if limit_char < current_letter:
             if list_sentence:
                 list_chapter.append(list_sentence)
                 list_sentence = []
+                list_sentence.append(u'%s.' % sentence)
+                current_letter = len(sentence) + 2
             else:
+                # First sentence longer than 3000 characters
+                print("Sentence may be truncated (>3000 characters):\n%s..." % sentence[:200] , file=sys.stderr )
                 list_sentence.append(u'%s.' % sentence)
                 list_chapter.append(list_sentence)
                 list_sentence = []
-            current_letter = 0
+                current_letter = 0
         else:
             list_sentence.append(u'%s.' % sentence)
 
@@ -134,15 +138,16 @@ def text_to_speech(txt,lang):
         lang = default_lang
 
     txt = txt.replace('"','')
+    txt = txt.replace('[','(')
+    txt = txt.replace(']',')')
     txt = txt.replace('.\n','. ')
-    txt = txt.replace('\n\n','. ')
+    #txt = txt.replace('\n\n','. ')
     total_letter = len(txt)
     if total_letter > 1:
         list_txt = txt.split('. ')
         list_txt = filter(None, list_txt)
     else:
         list_txt = []
-        list_txt = u"No text found."
 
     if list_txt:
         position = casier_txt(list_txt)
@@ -162,7 +167,7 @@ def text_to_speech(txt,lang):
     for index,value in enumerate(position):
         if value:
             value =' '.join(value)
-            print("Translating in %s ..." % (lang))
+            print("Translating into %s ..." % (lang))
             os.system('pico2wave -l %s -w article_picotts_%02d.wav "%s"' % (lang, index+1, value))
             print("File Creation: article_picotts_%02d.wav" % (index+1))
 
@@ -189,14 +194,14 @@ def main(argv):
             if opt in ('-h','--help'):
                 print(
 '''Usage:
-   %s [-i <input_txt>] [-l <lang>] [-o <wav_output>]
+   %s [-i <input_txt>] [-l <lang>] [-o <sound_file.mp3>]
 
 Without -i option it verifies if there is a text copied to clipboard
 
 Options:
     -i, --input_text_file   Reads a text file
     -l, --lang              Language. Default: "%s"
-    -o, --output_wav_file   Name of the result file.
+    -o, --sound_file   Name of the result file.
                             Default output file: "%s"
 
 Options lang:
